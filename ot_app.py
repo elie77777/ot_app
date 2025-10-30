@@ -57,8 +57,8 @@ if st.button("Submit"):
     else:
         with st.spinner("Saving to Google Sheets..."):
             # Conectar a Google Sheets aquí, solo en submit
-            scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-            creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+            scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+            creds = Credentials.from_service_account_file("credentials.json", scopes=scope)
             client = gspread.authorize(creds)
             sheet = client.open("OT_Records").sheet1
 
