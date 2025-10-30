@@ -8,7 +8,9 @@ st.title("Overtime Tracker")
 # Lista de agentes
 agents = ["Eliecid", "David", "Jhordan", "Brayan", "Luis", "Andrés", "Julio"]
 agent = st.selectbox("Select Agent", agents)
-date = st.date_input("Date")
+
+# Campo de fecha solo seleccionable desde calendario
+date = st.date_input("Date", value=datetime.today(), key="date_picker", help="Select a date from the calendar")
 
 # Formateador automático de hora (acepta hhmm o hh:mm)
 def format_time_input(key, placeholder="hhmm → 1422"):
@@ -33,7 +35,10 @@ def format_time_input(key, placeholder="hhmm → 1422"):
 from_time = format_time_input("From (hhmm or hh:mm)")
 to_time = format_time_input("To (hhmm or hh:mm)")
 reason = st.text_input("Reason", value="Scheduled OT")
-bonus = st.selectbox("Bonus 20k?", ["Yes", "No"])
+
+# Nuevo campo de Bonus y Holiday
+bonus = st.selectbox("+20K Bonus?", ["Yes", "No"])
+holiday = st.checkbox("Holiday?")
 
 # Cálculo local de previa (sin tocar Sheets)
 if from_time and to_time:
@@ -71,8 +76,8 @@ if st.button("Submit"):
             from_str = from_time.strftime("%H:%M")
             to_str = to_time.strftime("%H:%M")
 
-            # Insertar fila
-            sheet.append_row([agent, str(date), from_str, to_str, reason, bonus, ""])
+            # Insertar fila (agregamos el campo holiday)
+            sheet.append_row([agent, str(date), from_str, to_str, reason, bonus, holiday, ""])
 
             # Obtener última fila
             last_row = len(sheet.get_all_values())
@@ -80,7 +85,7 @@ if st.button("Submit"):
             # Fórmula para cálculo de horas
             formula = f'=IF(OR(C{last_row}="",D{last_row}=""),"",TEXT(D{last_row}-C{last_row},"h \\h\\r m \\m\\i\\n"))'
 
-            # Escribir fórmula en columna G
-            sheet.update_acell(f"G{last_row}", formula)
+            # Escribir fórmula en columna H (ahora que Holiday es la columna G)
+            sheet.update_acell(f"H{last_row}", formula)
 
         st.success("✅ Record added. Total time will appear in the sheet.")
