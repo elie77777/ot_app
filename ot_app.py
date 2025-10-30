@@ -1,6 +1,6 @@
 import streamlit as st
 import gspread
-from google.oauth2.service_account import Credentials
+from google.oauth2 import service_account
 from datetime import datetime
 
 st.title("Overtime Tracker")
@@ -35,7 +35,7 @@ to_time = format_time_input("To (hhmm or hh:mm)")
 reason = st.text_input("Reason", value="Scheduled OT")
 bonus = st.selectbox("Bonus 20k?", ["Yes", "No"])
 
-# Cálculo local de previa (rápido, sin tocar Sheets)
+# Cálculo local de previa (sin tocar Sheets)
 if from_time and to_time:
     start = datetime.combine(datetime.today(), from_time)
     end = datetime.combine(datetime.today(), to_time)
@@ -48,7 +48,7 @@ else:
 
 st.write(f"**Preview Total Time:** {preview_total}")
 
-# Guardar solo al presionar Submit; la fórmula se inserta en Google Sheets (columna G)
+# Guardar solo al presionar Submit
 if st.button("Submit"):
     if not agent:
         st.error("Agent is required.")
@@ -56,27 +56,31 @@ if st.button("Submit"):
         st.error("Both From and To times are required and must be valid.")
     else:
         with st.spinner("Saving to Google Sheets..."):
-            # Conectar a Google Sheets aquí, solo en submit
-            scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-            creds = Credentials.from_service_account_file("credentials.json", scopes=scope)
+            # Autenticación segura desde Streamlit Secrets
+            scope = [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive"
+            ]
+            creds = service_account.Credentials.from_service_account_info(
+                st.secrets["gcp_service_account"], scopes=scope
+            )
             client = gspread.authorize(creds)
             sheet = client.open("OT_Records").sheet1
 
-            # Formato de hora HH:MM (sin segundos)
+            # Formato de hora HH:MM
             from_str = from_time.strftime("%H:%M")
             to_str = to_time.strftime("%H:%M")
 
-            # Append sin total (dejamos que Sheets calcule)
+            # Insertar fila
             sheet.append_row([agent, str(date), from_str, to_str, reason, bonus, ""])
 
-            # Obtener la última fila insertada
+            # Obtener última fila
             last_row = len(sheet.get_all_values())
 
-            # Fórmula para cálculo de diferencia en formato "X hr Y min"
-            # Usa la resta directa de celdas D - C; TEXT formatea resultado.
+            # Fórmula para cálculo de horas
             formula = f'=IF(OR(C{last_row}="",D{last_row}=""),"",TEXT(D{last_row}-C{last_row},"h \\h\\r m \\m\\i\\n"))'
 
-            # Escribir la fórmula en la columna G de la última fila
+            # Escribir fórmula en columna G
             sheet.update_acell(f"G{last_row}", formula)
 
         st.success("✅ Record added. Total time will appear in the sheet.")
