@@ -72,17 +72,17 @@ if st.button("Submit"):
             from_str = from_time.strftime("%H:%M")
             to_str = to_time.strftime("%H:%M")
 
-            sheet.append_row([agent, str(date), from_str, to_str, reason, bonus, holiday, ""])
+            sheet.append_row([agent, str(date), from_str, to_str, reason, bonus, holiday, overnight, ""])
             last_row = len(sheet.get_all_values())
             formula = f'=IF(OR(C{last_row}="",D{last_row}=""),"",TEXT(D{last_row}-C{last_row},"h \\h\\r m \\m\\i\\n"))'
-            sheet.update_acell(f"H{last_row}", formula)
+            sheet.update_acell(f"I{last_row}", formula)
 
         st.success("✅ Record added successfully.")
 
 # -------------------------------
 # FILTRO DE TOTALES CON DEBUG
 # -------------------------------
-st.header("Total Monthly Time")
+st.header("Filter Total Time by Period")
 
 scope = [
     "https://www.googleapis.com/auth/spreadsheets",
