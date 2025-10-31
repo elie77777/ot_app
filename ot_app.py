@@ -79,7 +79,7 @@ if st.button("Submit"):
         st.success("✅ Record added successfully.")
 
 # -------------------------------
-# NUEVO FILTRO DE TOTALES
+# NUEVO FILTRO DE TOTALES (corregido)
 # -------------------------------
 st.header("Filter Total Time by Period")
 
@@ -118,11 +118,20 @@ if st.button("Show Total"):
         filtered_rows = []
 
         for row in data:
-            if row.get("Agent Name") == selected_agent:
-                try:
-                    record_date = datetime.strptime(row.get("Date"), "%Y-%m-%d")
-                except:
+            agent_name = row.get("Agent Name", "").strip()
+            if agent_name == selected_agent:
+                date_str = row.get("Date", "").strip()
+                if not date_str:
                     continue
+                try:
+                    # Intenta distintos formatos
+                    if isinstance(date_str, datetime):
+                        record_date = date_str
+                    else:
+                        record_date = datetime.strptime(date_str.split(" ")[0], "%Y-%m-%d")
+                except ValueError:
+                    continue
+
                 if start_date <= record_date <= end_date:
                     time_str = row.get("Total Time", "")
                     if "h" in time_str:
@@ -135,11 +144,11 @@ if st.button("Show Total"):
         total_hours = total_minutes // 60
         remaining_minutes = total_minutes % 60
 
-        st.subheader(f"Total Time for {selected_agent}: {total_hours}h {remaining_minutes}m")
         if filtered_rows:
+            st.subheader(f"Total Time for {selected_agent}: {total_hours}h {remaining_minutes}m")
             st.dataframe(filtered_rows)
         else:
-            st.info("No records found for that period.")
+            st.info(f"No records found for {selected_agent} for that period.")
 
     except Exception as e:
         st.error(f"Error reading sheet: {e}")
