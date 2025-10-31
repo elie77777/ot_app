@@ -123,11 +123,21 @@ if st.button("Show Total"):
         total_minutes = 0
         filtered_rows = []
 
+        # Primero, mostrar TODOS los nombres de agentes en la hoja
+        unique_agents = set()
+        for row in data:
+            agent_name = row.get("Agent Name", "").strip()
+            if agent_name:
+                unique_agents.add(agent_name)
+        
+        st.write(f"👥 Agentes encontrados en la hoja: {sorted(unique_agents)}")
+        st.write("---")
+        
         for row in data:
             agent_name = row.get("Agent Name", "").strip()
             
-            # Mostrar todos los agentes únicos encontrados
-            if agent_name == selected_agent:
+            # Comparación case-insensitive (ignora mayúsculas/minúsculas)
+            if agent_name.lower() == selected_agent.lower():
                 st.write(f"✅ Encontré a '{agent_name}'")
                 
                 date_str = row.get("Date", "").strip()
