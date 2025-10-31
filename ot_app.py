@@ -5,16 +5,20 @@ from datetime import datetime
 
 st.title("Overtime Tracker")
 
+# Inicializar session_state para resetear campos
+if 'form_key' not in st.session_state:
+    st.session_state.form_key = 0
+
 # Lista de agentes
 agents = ["Eliecid", "David", "Jhordan", "Brayan", "Luis", "Andrés", "Julio"]
-agent = st.selectbox("Select Agent", agents)
+agent = st.selectbox("Select Agent", agents, key=f"agent_{st.session_state.form_key}")
 
 # Campo de fecha
-date = st.date_input("Date", value=datetime.today(), key="date_picker", help="Select a date")
+date = st.date_input("Date", value=datetime.today(), key=f"date_picker_{st.session_state.form_key}", help="Select a date")
 
 # Función para formatear hora
 def format_time_input(key, placeholder="hhmm → 1422"):
-    user_input = st.text_input(key, placeholder=placeholder)
+    user_input = st.text_input(key, placeholder=placeholder, key=f"{key}_{st.session_state.form_key}")
     user_input = user_input.replace(":", "").strip()
     if len(user_input) == 4 and user_input.isdigit():
         formatted = f"{user_input[:2]}:{user_input[2:]}"
@@ -34,11 +38,11 @@ def format_time_input(key, placeholder="hhmm → 1422"):
 
 from_time = format_time_input("From (hhmm or hh:mm)")
 to_time = format_time_input("To (hhmm or hh:mm)")
-reason = st.text_input("Reason", value="Scheduled OT")
+reason = st.text_input("Reason", value="Scheduled OT", key=f"reason_{st.session_state.form_key}")
 
-bonus = st.selectbox("+20K Bonus?", ["Yes", "No"])
-holiday = st.checkbox("Holiday?")
-overnight = st.checkbox("Overnight?")
+bonus = st.selectbox("+20K Bonus?", ["Yes", "No"], key=f"bonus_{st.session_state.form_key}")
+holiday = st.checkbox("Holiday?", key=f"holiday_{st.session_state.form_key}")
+overnight = st.checkbox("Overnight?", key=f"overnight_{st.session_state.form_key}")
 
 # Cálculo previo
 if from_time and to_time:
@@ -78,6 +82,9 @@ if st.button("Submit"):
             sheet.update_acell(f"I{last_row}", formula)
 
         st.success("✅ Record added successfully.")
+        
+        # Incrementar el form_key para resetear todos los campos
+        st.session_state.form_key += 1
         st.rerun()
 
 # -------------------------------
