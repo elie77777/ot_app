@@ -83,7 +83,7 @@ if st.button("Submit"):
 # -------------------------------
 # FILTRO DE TOTALES CON DEBUG
 # -------------------------------
-st.header("Filter Total Time by Period")
+st.header("Total Monthly Time")
 
 scope = [
     "https://www.googleapis.com/auth/spreadsheets",
