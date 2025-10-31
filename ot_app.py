@@ -108,67 +108,35 @@ else:
 
 selected_agent = st.selectbox("Agent Name (Filter)", agents)
 
-st.write(f"🔍 **DEBUG INFO:**")
-st.write(f"- Buscando: '{selected_agent}'")
-st.write(f"- Periodo: {start_date.date()} al {end_date.date()}")
-
 if st.button("Show Total"):
     try:
         values = sheet.get_all_values()
         headers = values[0]
-        
-        st.write(f"📋 **COLUMNAS EN LA HOJA:**")
-        st.write(headers)
-        st.write("---")
-        
         data = [dict(zip(headers, row)) for row in values[1:] if len(row) == len(headers)]
-
-        st.write(f"📊 Total de filas en la hoja: {len(data)}")
 
         total_minutes = 0
         filtered_rows = []
 
-        # Primero, mostrar TODOS los nombres de agentes en la hoja
-        unique_agents = set()
-        for row in data:
-            agent_name = row.get("Agent Name", "").strip()
-            if agent_name:
-                unique_agents.add(agent_name)
-        
-        st.write(f"👥 Agentes encontrados en la hoja: {sorted(unique_agents)}")
-        st.write("---")
-        
         for row in data:
             agent_name = row.get("Agent Name", "").strip()
             
             # Comparación case-insensitive (ignora mayúsculas/minúsculas)
             if agent_name.lower() == selected_agent.lower():
-                st.write(f"✅ Encontré a '{agent_name}'")
-                
                 date_str = row.get("Date", "").strip()
-                st.write(f"   - Fecha en la hoja: '{date_str}'")
                 
                 if not date_str:
-                    st.write(f"   ⚠️ Fecha vacía, saltando...")
                     continue
                     
                 try:
-                    # Intenta distintos formatos
                     if isinstance(date_str, datetime):
                         record_date = date_str
                     else:
                         record_date = datetime.strptime(date_str.split(" ")[0], "%Y-%m-%d")
-                    
-                    st.write(f"   - Fecha convertida: {record_date.date()}")
-                    st.write(f"   - ¿Está en el rango? {start_date <= record_date <= end_date}")
-                    
-                except ValueError as e:
-                    st.write(f"   ❌ Error convirtiendo fecha: {e}")
+                except ValueError:
                     continue
 
                 if start_date <= record_date <= end_date:
                     time_str = row.get("Total Time", "").strip()
-                    st.write(f"   ✅ ¡Fecha válida! Total Time: '{time_str}'")
                     
                     # Parsear diferentes formatos: "1h 33m", "1 hr 33 min", "2h 0min"
                     if time_str:
@@ -188,16 +156,14 @@ if st.button("Show Total"):
                                     m = 0
                                     
                                 total_minutes += h * 60 + m
-                                st.write(f"   ⏱️ Parseado: {h}h {m}m = {h*60 + m} minutos")
-                        except Exception as e:
-                            st.write(f"   ⚠️ Error parseando tiempo: {e}")
+                        except Exception:
+                            pass
                             
                     filtered_rows.append(row)
 
         total_hours = total_minutes // 60
         remaining_minutes = total_minutes % 60
 
-        st.write(f"---")
         if filtered_rows:
             st.subheader(f"Total Time for {selected_agent}: {total_hours}h {remaining_minutes}m")
             st.dataframe(filtered_rows)
@@ -206,5 +172,3 @@ if st.button("Show Total"):
 
     except Exception as e:
         st.error(f"Error reading sheet: {e}")
-        import traceback
-        st.code(traceback.format_exc())
