@@ -5,6 +5,27 @@ from datetime import datetime
 
 st.title("Overtime Tracker")
 
+# Sistema de autenticación
+if 'authenticated' not in st.session_state:
+    st.session_state.authenticated = False
+
+if not st.session_state.authenticated:
+    st.subheader("🔒 Access Required")
+    password_input = st.text_input("Enter Password", type="password", key="login_password")
+    
+    if st.button("Login"):
+        # Cambia esta contraseña por la que quieras
+        if password_input == "OT2024":  # ⬅️ CAMBIA ESTA CONTRASEÑA
+            st.session_state.authenticated = True
+            st.rerun()
+        else:
+            st.error("❌ Incorrect password")
+    
+    st.stop()  # Detiene la ejecución aquí si no está autenticado
+
+# Si llega aquí, el usuario está autenticado
+st.success("✅ Access granted")
+
 # Inicializar session_state para resetear campos
 if 'form_key' not in st.session_state:
     st.session_state.form_key = 0
@@ -90,7 +111,7 @@ if st.button("Submit"):
 # -------------------------------
 # FILTRO DE TOTALES CON DEBUG
 # -------------------------------
-st.header("Total Monthly Time")
+st.header("Filter Total Time by Period")
 
 scope = [
     "https://www.googleapis.com/auth/spreadsheets",
