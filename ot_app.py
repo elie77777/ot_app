@@ -164,8 +164,7 @@ for row in data:
             record_date = parse(date_str)  # Detecta automáticamente el formato
         except:
             continue
-
-        if start_date <= record_date <= end_date:
+            if start_date <= record_date <= end_date:
             time_str = row.get("Total Time", "")
             if "h" in time_str:
                 parts = time_str.split("h")
