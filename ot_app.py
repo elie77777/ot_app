@@ -15,7 +15,7 @@ if not st.session_state.authenticated:
     
     if st.button("Login"):
         # Cambia esta contraseña por la que quieras
-        if password_input == "OT2024":  # ⬅️ CAMBIA ESTA CONTRASEÑA
+        if password_input == st.secrets["app_password"]:
             st.session_state.authenticated = True
             st.rerun()
         else:
