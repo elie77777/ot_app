@@ -38,6 +38,7 @@ reason = st.text_input("Reason", value="Scheduled OT")
 
 bonus = st.selectbox("+20K Bonus?", ["Yes", "No"])
 holiday = st.checkbox("Holiday?")
+overnight = st.checkbox("Overnight?")
 
 # Cálculo previo
 if from_time and to_time:
@@ -81,7 +82,7 @@ if st.button("Submit"):
 # -------------------------------
 # FILTRO DE TOTALES CON DEBUG
 # -------------------------------
-st.header("Filter Total Time by Period")
+st.header("Total Monthly Time")
 
 scope = [
     "https://www.googleapis.com/auth/spreadsheets",
