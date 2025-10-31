@@ -40,7 +40,7 @@ reason = st.text_input("Reason", value="Scheduled OT")
 bonus = st.selectbox("+20K Bonus?", ["Yes", "No"])
 holiday = st.checkbox("Holiday?")
 
-# Cálculo local de previa (sin tocar Sheets)
+# Cálculo local de previa
 if from_time and to_time:
     start = datetime.combine(datetime.today(), from_time)
     end = datetime.combine(datetime.today(), to_time)
@@ -61,7 +61,6 @@ if st.button("Submit"):
         st.error("Both From and To times are required and must be valid.")
     else:
         with st.spinner("Saving to Google Sheets..."):
-            # Autenticación segura desde Streamlit Secrets
             scope = [
                 "https://www.googleapis.com/auth/spreadsheets",
                 "https://www.googleapis.com/auth/drive"
@@ -72,7 +71,6 @@ if st.button("Submit"):
             client = gspread.authorize(creds)
             sheet = client.open("OT_Records").sheet1
 
-            # Formato de hora HH:MM
             from_str = from_time.strftime("%H:%M")
             to_str = to_time.strftime("%H:%M")
 
@@ -84,8 +82,59 @@ if st.button("Submit"):
 
             # Fórmula para cálculo de horas
             formula = f'=IF(OR(C{last_row}="",D{last_row}=""),"",TEXT(D{last_row}-C{last_row},"h \\h\\r m \\m\\i\\n"))'
-
-            # Escribir fórmula en columna H (ahora que Holiday es la columna G)
             sheet.update_acell(f"H{last_row}", formula)
 
         st.success("✅ Record added. Total time will appear in the sheet.")
+
+# -------------------------------
+# NUEVA SECCIÓN: FILTRO DE TOTAL POR PERIODO
+# -------------------------------
+st.header("Filter Total Time by Period")
+
+# Autenticación para leer la hoja
+scope = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive"
+]
+creds = service_account.Credentials.from_service_account_info(
+    st.secrets["gcp_service_account"], scopes=scope
+)
+client = gspread.authorize(creds)
+sheet = client.open("OT_Records").sheet1
+
+# Rango de fechas predefinido
+period_option = st.selectbox(
+    "Select Time Frame",
+    ["Del 06 de Octubre al 02 de Noviembre", "Del 03 de Noviembre al 07 de Diciembre"]
+)
+
+if period_option == "Del 06 de Octubre al 02 de Noviembre":
+    start_date = datetime(2024, 10, 6)
+    end_date = datetime(2024, 11, 2)
+else:
+    start_date = datetime(2024, 11, 3)
+    end_date = datetime(2024, 12, 7)
+
+selected_agent = st.selectbox("Agent Name (Filter)", agents)
+
+if st.button("Show Total"):
+    data = sheet.get_all_records()
+    total_minutes = 0
+
+    for row in data:
+        if row.get("Agent") == selected_agent:
+            try:
+                record_date = datetime.strptime(row.get("Date"), "%Y-%m-%d")
+            except:
+                continue
+            if start_date <= record_date <= end_date:
+                time_str = row.get("Total Time") or row.get("Total") or ""
+                if "h" in time_str:
+                    parts = time_str.split("h")
+                    h = int(parts[0].strip())
+                    m = int(parts[1].replace("m", "").replace("min", "").strip() or 0)
+                    total_minutes += h * 60 + m
+
+    total_hours = total_minutes // 60
+    remaining_minutes = total_minutes % 60
+    st.success(f"**Total Time for {selected_agent} ({period_option}): {total_hours}h {remaining_minutes}m**")
