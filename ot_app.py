@@ -116,6 +116,11 @@ if st.button("Show Total"):
     try:
         values = sheet.get_all_values()
         headers = values[0]
+        
+        st.write(f"📋 **COLUMNAS EN LA HOJA:**")
+        st.write(headers)
+        st.write("---")
+        
         data = [dict(zip(headers, row)) for row in values[1:] if len(row) == len(headers)]
 
         st.write(f"📊 Total de filas en la hoja: {len(data)}")
