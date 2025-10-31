@@ -14,13 +14,8 @@ if not st.session_state.authenticated:
     password_input = st.text_input("Enter Password", type="password", key="login_password")
     
     if st.button("Login"):
-        # Intenta usar secrets, si no existe usa contraseña por defecto
-        try:
-            correct_password = st.secrets["app_password"]
-        except KeyError:
-            correct_password = "OT2024"  # Contraseña por defecto si secrets no está configurado
-        
-        if password_input == correct_password:
+        # Cambia esta contraseña por la que quieras
+        if password_input == "OT2024":  # ⬅️ CAMBIA ESTA CONTRASEÑA
             st.session_state.authenticated = True
             st.rerun()
         else:
