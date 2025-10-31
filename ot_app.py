@@ -78,11 +78,12 @@ if st.button("Submit"):
             sheet.update_acell(f"I{last_row}", formula)
 
         st.success("✅ Record added successfully.")
+        st.rerun()
 
 # -------------------------------
 # FILTRO DE TOTALES CON DEBUG
 # -------------------------------
-st.header("Total monthly Time")
+st.header("Filter Total Time by Period")
 
 scope = [
     "https://www.googleapis.com/auth/spreadsheets",
