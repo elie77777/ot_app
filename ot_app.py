@@ -14,7 +14,7 @@ if not st.session_state.authenticated:
     password_input = st.text_input("Enter Password", type="password", key="login_password")
     
     if st.button("Login"):
-        # Usa la contraseña desde st.secrets
+        # Lee la contraseña desde st.secrets (ahora correctamente configurado)
         if password_input == st.secrets["app_password"]:
             st.session_state.authenticated = True
             st.rerun()
