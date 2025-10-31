@@ -167,14 +167,31 @@ if st.button("Show Total"):
                     continue
 
                 if start_date <= record_date <= end_date:
-                    time_str = row.get("Total Time", "")
+                    time_str = row.get("Total Time", "").strip()
                     st.write(f"   ✅ ¡Fecha válida! Total Time: '{time_str}'")
                     
-                    if "h" in time_str:
-                        parts = time_str.split("h")
-                        h = int(parts[0].strip())
-                        m = int(parts[1].replace("r", "").replace("m", "").replace("min", "").strip() or 0)
-                        total_minutes += h * 60 + m
+                    # Parsear diferentes formatos: "1h 33m", "1 hr 33 min", "2h 0min"
+                    if time_str:
+                        try:
+                            # Reemplazar "hr" por "h" y "min" por "m" para normalizar
+                            normalized = time_str.replace(" hr ", "h ").replace(" min", "m")
+                            
+                            if "h" in normalized:
+                                parts = normalized.split("h")
+                                h = int(parts[0].strip())
+                                
+                                # Extraer minutos si existen
+                                if len(parts) > 1:
+                                    min_part = parts[1].replace("r", "").replace("m", "").strip()
+                                    m = int(min_part) if min_part and min_part.isdigit() else 0
+                                else:
+                                    m = 0
+                                    
+                                total_minutes += h * 60 + m
+                                st.write(f"   ⏱️ Parseado: {h}h {m}m = {h*60 + m} minutos")
+                        except Exception as e:
+                            st.write(f"   ⚠️ Error parseando tiempo: {e}")
+                            
                     filtered_rows.append(row)
 
         total_hours = total_minutes // 60
