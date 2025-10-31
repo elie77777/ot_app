@@ -152,3 +152,24 @@ if st.button("Show Total"):
 
     except Exception as e:
         st.error(f"Error reading sheet: {e}")
+from dateutil.parser import parse
+
+for row in data:
+    agent_name = row.get("Agent Name", "").strip()
+    if agent_name == selected_agent:
+        date_str = row.get("Date", "").strip()
+        if not date_str:
+            continue
+        try:
+            record_date = parse(date_str)  # Detecta automáticamente el formato
+        except:
+            continue
+
+        if start_date <= record_date <= end_date:
+            time_str = row.get("Total Time", "")
+            if "h" in time_str:
+                parts = time_str.split("h")
+                h = int(parts[0].strip())
+                m = int(parts[1].replace("r", "").replace("m", "").replace("min", "").strip() or 0)
+                total_minutes += h * 60 + m
+            filtered_rows.append(row)
