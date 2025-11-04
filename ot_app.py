@@ -12,28 +12,32 @@ agent = st.selectbox("Select Agent", agents)
 # Campo de fecha
 date = st.date_input("Date", value=datetime.today(), key="date_picker", help="Select a date")
 
-# Función para formatear hora
-def format_time_input(key, placeholder="hhmm → 1422"):
-    user_input = st.text_input(key, placeholder=placeholder)
-    user_input = user_input.replace(":", "").strip()
-    if len(user_input) == 4 and user_input.isdigit():
-        formatted = f"{user_input[:2]}:{user_input[2:]}"
-        try:
-            return datetime.strptime(formatted, "%H:%M").time()
-        except ValueError:
-            st.warning(f"Invalid time: {formatted}")
-            return None
-    elif len(user_input) == 5 and ":" in user_input:
-        try:
-            return datetime.strptime(user_input, "%H:%M").time()
-        except ValueError:
-            st.warning(f"Invalid time: {user_input}")
-            return None
-    else:
-        return None
+# Función para selector de tiempo estilo despertador
+def time_picker(label, key_prefix):
+    col1, col2 = st.columns(2)
+    with col1:
+        hour = st.selectbox(
+            f"{label} - Hour",
+            options=list(range(0, 24)),
+            format_func=lambda x: f"{x:02d}",
+            key=f"{key_prefix}_hour"
+        )
+    with col2:
+        minute = st.selectbox(
+            f"{label} - Minute",
+            options=list(range(0, 60)),
+            format_func=lambda x: f"{x:02d}",
+            key=f"{key_prefix}_minute"
+        )
+    return datetime.strptime(f"{hour:02d}:{minute:02d}", "%H:%M").time()
 
-from_time = format_time_input("From (hhmm or hh:mm)")
-to_time = format_time_input("To (hhmm or hh:mm)")
+# Selectores de tiempo
+st.subheader("From Time")
+from_time = time_picker("From", "from")
+
+st.subheader("To Time")
+to_time = time_picker("To", "to")
+
 reason = st.text_input("Reason", value="Scheduled OT")
 
 bonus = st.selectbox("+20K Bonus?", ["Yes", "No"])
@@ -55,8 +59,8 @@ st.write(f"**Preview Total Time:** {preview_total}")
 
 # Guardar registro
 if st.button("Submit"):
-    if not agent or not from_time or not to_time:
-        st.error("All fields are required.")
+    if not agent:
+        st.error("Agent is required.")
     else:
         with st.spinner("Saving to Google Sheets..."):
             scope = [
@@ -80,9 +84,9 @@ if st.button("Submit"):
         st.success("✅ Record added successfully.")
 
 # -------------------------------
-# FILTRO DE TOTALES CON DEBUG
+# FILTRO DE TOTALES
 # -------------------------------
-st.header("Total monthly Time")
+st.header("Total Monthly Time")
 
 scope = [
     "https://www.googleapis.com/auth/spreadsheets",
@@ -107,7 +111,7 @@ else:
     start_date = datetime(2025, 11, 3)
     end_date = datetime(2025, 12, 7)
 
-selected_agent = st.selectbox("Agent Name (Filter)", agents)
+selected_agent = st.selectbox("Agent Name (Filter)", agents, key="filter_agent")
 
 if st.button("Show Total"):
     try:
@@ -121,7 +125,7 @@ if st.button("Show Total"):
         for row in data:
             agent_name = row.get("Agent Name", "").strip()
             
-            # Comparación case-insensitive (ignora mayúsculas/minúsculas)
+            # Comparación case-insensitive
             if agent_name.lower() == selected_agent.lower():
                 date_str = row.get("Date", "").strip()
                 
@@ -139,17 +143,15 @@ if st.button("Show Total"):
                 if start_date <= record_date <= end_date:
                     time_str = row.get("Total Time", "").strip()
                     
-                    # Parsear diferentes formatos: "1h 33m", "1 hr 33 min", "2h 0min"
+                    # Parsear diferentes formatos
                     if time_str:
                         try:
-                            # Reemplazar "hr" por "h" y "min" por "m" para normalizar
                             normalized = time_str.replace(" hr ", "h ").replace(" min", "m")
                             
                             if "h" in normalized:
                                 parts = normalized.split("h")
                                 h = int(parts[0].strip())
                                 
-                                # Extraer minutos si existen
                                 if len(parts) > 1:
                                     min_part = parts[1].replace("r", "").replace("m", "").strip()
                                     m = int(min_part) if min_part and min_part.isdigit() else 0
